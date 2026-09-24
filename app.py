@@ -119,7 +119,10 @@ products = [
         'title': 'Smart Watch Completo com NFC',
         'category': 'Smartwatches',
         'price': 'R$ 120,00',
-        'desc': 'Com NFC para pagamentos, apps e monitor de saúde.',
+        'desc': (
+            'Com NFC para abertura de portas, apps diversos, sincronização e'
+            ' monitor de saúde.'
+        ),
         'status': 'Sob Encomenda',
         'image': 'assets/smartwatch.jpg',
     },
@@ -177,6 +180,24 @@ products = [
         'status': 'Sob Encomenda',
         'image': 'assets/tabela_geral.jpg',
     },
+    {
+        'sku': 'ELE-AIR-001',
+        'title': 'Air Fryer Gaabor 2.8L',
+        'category': 'Eletroportáteis',
+        'price': 'R$ 250,00',
+        'desc': 'Frita sem óleo, aquecimento rápido. Disponível em 127V e 220V.',
+        'status': 'Sob Encomenda',
+        'image': 'assets/airfryer.jpg',
+    },
+    {
+        'sku': 'AUD-CSM-001',
+        'title': 'Caixa de Som Bluetooth Portátil Beltdow',
+        'category': 'Áudio',
+        'price': 'R$ 100,00',
+        'desc': 'Som potente, Bluetooth 5.3, iluminação colorida e TWS.',
+        'status': 'Sob Encomenda',
+        'image': 'assets/caixa_som.jpg',
+    },
 ]
 
 # Filtros e Pesquisa na Interface do Streamlit
@@ -218,7 +239,6 @@ else:
     cols = st.columns(3)
     for i, p in enumerate(filtered_products):
         with cols[i % 3]:
-            # Cor do Badge de Status
             is_stock = 'Estoque' in p['status']
             badge_bg = (
                 'rgba(16, 185, 129, 0.15)'
@@ -227,9 +247,7 @@ else:
             )
             badge_color = '#10b981' if is_stock else '#f59e0b'
 
-            # Container visual do Card
             with st.container(border=True):
-                # Linha de SKU e Status
                 st.markdown(
                     f"""
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -240,13 +258,11 @@ else:
                     unsafe_allow_html=True,
                 )
 
-                # Imagem do Produto (Lê diretamente da pasta assets no GitHub)
                 try:
                     st.image(p['image'], use_container_width=True)
                 except Exception:
                     st.warning('Imagem não encontrada na pasta assets')
 
-                # Informações do Produto
                 st.markdown(
                     f"""
                     <span style="font-size: 0.7rem; font-weight: 600; color: #ff6600; text-transform: uppercase; letter-spacing: 0.5px;">{p['category']}</span>
@@ -256,7 +272,6 @@ else:
                     unsafe_allow_html=True,
                 )
 
-                # Rodapé do Card (Preço e Botão WhatsApp)
                 col_price, col_btn = st.columns([1, 1])
                 with col_price:
                     st.markdown(
@@ -281,7 +296,7 @@ else:
                         unsafe_allow_html=True,
                     )
 
-st.markdown('<br><hr>', unsafe_allow_html=True)
+st.markdown('<br><hr>', unsafe_call_html=True)
 st.markdown(
     "<p style='text-align: center; color: #9ca3af; font-size: 0.85rem;'>©"
     ' 2026 <b>ShopXpress</b> - Campos dos Goytacazes, RJ. Todos os direitos'

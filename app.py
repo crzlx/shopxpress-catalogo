@@ -296,7 +296,7 @@ else:
                         unsafe_allow_html=True,
                     )
 
-st.markdown('<br><hr>', unsafe_call_html=True)
+st.markdown('<br><hr>', unsafe_allow_html=True)
 st.markdown(
     "<p style='text-align: center; color: #9ca3af; font-size: 0.85rem;'>©"
     ' 2026 <b>ShopXpress</b> - Campos dos Goytacazes, RJ. Todos os direitos'

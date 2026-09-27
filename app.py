@@ -34,40 +34,94 @@ is_admin = st.query_params.get("admin") == "1"
 # PÁGINA ADMIN (VISÃO DESENVOLVEDOR - OCULTA)
 # ==========================================
 if is_admin:
-    st.title("⚙️ Painel de Controle - ShopXpress")
-    st.write("Acesso restrito para gerenciamento de estoque e catálogo.")
+    st.title("⚙️ Painel de Controlo - ShopXpress")
+    st.write("Acesso restrito para gestão de stock e catálogo.")
     
-    senha = st.text_input("Digite a senha de acesso:", type="password")
+    senha = st.text_input("Digite a palavra-passe de acesso:", type="password")
     
-    if senha == "pedro1904": # <--- Mude sua senha aqui!
+    if senha == "admin123": # <--- Mude a sua palavra-passe aqui!
         st.success("Acesso Liberado!")
         st.markdown("### Banco de Dados Atual (Google Sheets)")
         st.dataframe(df_produtos, use_container_width=True)
         
         st.markdown("---")
-        st.markdown("### Adicionar Novo Produto")
-        with st.form("form_novo_produto"):
-            col1, col2 = st.columns(2)
-            with col1:
-                novo_sku = st.text_input("SKU (Ex: NOV-001)")
-                novo_nome = st.text_input("Nome do Produto")
-                novo_cat = st.text_input("Categoria")
-                novo_preco = st.text_input("Preço (Ex: 45.00)")
-            with col2:
-                novo_status = st.selectbox("Status", ["Sob Encomenda", "Em Estoque", "Esgotado"])
-                nova_img = st.text_input("Caminho da Imagem (Ex: assets/novo_item.jpg)")
-                nova_desc = st.text_area("Descrição do Produto")
+        
+        # Criação de separadores (Tabs) para organizar o painel
+        tab1, tab2 = st.tabs(["➕ Adicionar Novo Produto", "✏️ Editar Produto Existente"])
+        
+        # TAB 1: ADICIONAR PRODUTO
+        with tab1:
+            st.markdown("### Adicionar Novo Produto")
+            with st.form("form_novo_produto"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    novo_sku = st.text_input("SKU (Ex: NOV-001)")
+                    novo_nome = st.text_input("Nome do Produto")
+                    novo_cat = st.text_input("Categoria")
+                    novo_preco = st.text_input("Preço (Ex: 45.00)")
+                with col2:
+                    novo_status = st.selectbox("Status", ["Sob Encomenda", "Em Estoque", "Esgotado"])
+                    nova_img = st.text_input("Caminho da Imagem (Ex: assets/novo_item.jpg)")
+                    nova_desc = st.text_area("Descrição do Produto")
+                
+                submit_novo = st.form_submit_button("Salvar na Planilha")
+                
+                if submit_novo:
+                    if novo_sku and novo_nome:
+                        sheet.append_row([novo_sku, novo_nome, novo_cat, novo_preco, nova_desc, novo_status, nova_img])
+                        st.success(f"Produto {novo_nome} adicionado com sucesso! Atualize a página (F5) para ver as alterações.")
+                    else:
+                        st.error("Por favor, preencha pelo menos o SKU e o Nome.")
+                        
+        # TAB 2: EDITAR PRODUTO
+        with tab2:
+            st.markdown("### Editar Produto Existente")
             
-            submit = st.form_submit_button("Salvar na Planilha")
+            # Lista todos os SKUs disponíveis para seleção
+            lista_skus = df_produtos['SKU'].tolist()
+            produto_selecionado = st.selectbox("Selecione o SKU do produto que deseja editar:", [""] + lista_skus)
             
-            if submit:
-                if novo_sku and novo_nome:
-                    sheet.append_row([novo_sku, novo_nome, novo_cat, novo_preco, nova_desc, novo_status, nova_img])
-                    st.success(f"Produto {novo_nome} adicionado com sucesso! Atualize a página.")
-                else:
-                    st.error("Por favor, preencha pelo menos o SKU e o Nome.")
+            if produto_selecionado != "":
+                # Obtém os dados do produto selecionado
+                produto_data = df_produtos[df_produtos['SKU'] == produto_selecionado].iloc[0]
+                
+                with st.form("form_editar_produto"):
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        # O SKU não deve ser editável, pois é a chave de identificação
+                        edit_sku = st.text_input("SKU (Não editável)", value=produto_data['SKU'], disabled=True)
+                        edit_nome = st.text_input("Nome do Produto", value=str(produto_data['Nome']))
+                        edit_cat = st.text_input("Categoria", value=str(produto_data['Categoria']))
+                        edit_preco = st.text_input("Preço", value=str(produto_data['Preco']))
+                    with col2:
+                        # Lógica para o dropdown de Status carregar o valor atual corretamente
+                        status_atual = str(produto_data['Status'])
+                        opcoes_status = ["Sob Encomenda", "Em Estoque", "Esgotado"]
+                        if status_atual not in opcoes_status:
+                            opcoes_status.append(status_atual) # Adiciona se houver algum status customizado na folha
+                            
+                        edit_status = st.selectbox("Status", opcoes_status, index=opcoes_status.index(status_atual))
+                        edit_img = st.text_input("Caminho da Imagem", value=str(produto_data['Imagem_URL']))
+                        edit_desc = st.text_area("Descrição do Produto", value=str(produto_data['Descricao']))
+                    
+                    submit_edit = st.form_submit_button("Guardar Alterações")
+                    
+                    if submit_edit:
+                        try:
+                            with st.spinner('A atualizar dados no Google Sheets...'):
+                                # Localiza a célula exata que contém o SKU na folha de cálculo
+                                cell = sheet.find(produto_selecionado)
+                                row_idx = cell.row
+                                # Atualiza toda a linha (colunas A a G) com os novos valores
+                                valores_atualizados = [[edit_sku, edit_nome, edit_cat, edit_preco, edit_desc, edit_status, edit_img]]
+                                sheet.update(f'A{row_idx}:G{row_idx}', valores_atualizados)
+                                
+                                st.success(f"Produto '{edit_nome}' atualizado com sucesso! Atualize a página (F5) para visualizar.")
+                        except Exception as e:
+                            st.error(f"Ocorreu um erro ao atualizar: {e}")
+                            
     elif senha != "":
-        st.error("Senha incorreta!")
+        st.error("Palavra-passe incorreta!")
 
 # ==========================================
 # PÁGINA VITRINE (VISÃO DO CLIENTE - PADRÃO)

@@ -107,8 +107,13 @@ if pagina == "Vitrine de Produtos":
                     # Botão WhatsApp e Preço
                     col_price, col_btn = st.columns([1, 1])
                     with col_price:
-                        # Formata o preço com 2 casas decimais, lidando com números
-                        preco_formatado = f"R$ {float(row['Preco']):.2f}".replace('.', ',') if str(row['Preco']).replace('.','',1).isdigit() else f"R$ {row['Preco']}"
+                        # Formata o preço lidando com possíveis vírgulas já na planilha
+                        try:
+                            preco_val = str(row['Preco']).replace(',', '.')
+                            preco_formatado = f"R$ {float(preco_val):.2f}".replace('.', ',')
+                        except ValueError:
+                            preco_formatado = f"R$ {row['Preco']}"
+                            
                         st.markdown(f"<div style='font-size: 1.15rem; font-weight: 800; color: white; padding-top: 6px;'>{preco_formatado}</div>", unsafe_allow_html=True)
                     with col_btn:
                         whatsapp_msg = urllib.parse.quote(f"Olá! Gostaria de encomendar o produto [SKU: {row['SKU']}]: *{row['Nome']}*. Poderia me passar mais detalhes?")

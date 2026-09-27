@@ -39,7 +39,7 @@ if is_admin:
     
     senha = st.text_input("Digite a senha de acesso:", type="password")
     
-    if senha == "admin123": # <--- Mude sua senha aqui!
+    if senha == "pedro1904": # <--- Mude sua senha aqui!
         st.success("Acesso Liberado!")
         st.markdown("### Banco de Dados Atual (Google Sheets)")
         st.dataframe(df_produtos, use_container_width=True)

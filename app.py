@@ -26,16 +26,53 @@ except Exception as e:
     st.error(f"Erro ao conectar ao banco de dados. Verifique os Secrets. Erro: {e}")
     st.stop()
 
-# --- MENU LATERAL (NAVEGAÇÃO) ---
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/3144/3144456.png", width=50)
-st.sidebar.title("Navegação")
-pagina = st.sidebar.radio("Ir para:", ["Vitrine de Produtos", "Painel Admin (Desenvolvedor)"])
-st.sidebar.markdown("---")
+# --- VERIFICAÇÃO DE ROTA OCULTA ---
+# Se o link tiver ?admin=1 no final, ele abre o painel. Se não, abre a vitrine.
+is_admin = st.query_params.get("admin") == "1"
 
 # ==========================================
-# PÁGINA 1: VITRINE (VISÃO DO CLIENTE)
+# PÁGINA ADMIN (VISÃO DESENVOLVEDOR - OCULTA)
 # ==========================================
-if pagina == "Vitrine de Produtos":
+if is_admin:
+    st.title("⚙️ Painel de Controle - ShopXpress")
+    st.write("Acesso restrito para gerenciamento de estoque e catálogo.")
+    
+    senha = st.text_input("Digite a senha de acesso:", type="password")
+    
+    if senha == "admin123": # <--- Mude sua senha aqui!
+        st.success("Acesso Liberado!")
+        st.markdown("### Banco de Dados Atual (Google Sheets)")
+        st.dataframe(df_produtos, use_container_width=True)
+        
+        st.markdown("---")
+        st.markdown("### Adicionar Novo Produto")
+        with st.form("form_novo_produto"):
+            col1, col2 = st.columns(2)
+            with col1:
+                novo_sku = st.text_input("SKU (Ex: NOV-001)")
+                novo_nome = st.text_input("Nome do Produto")
+                novo_cat = st.text_input("Categoria")
+                novo_preco = st.text_input("Preço (Ex: 45.00)")
+            with col2:
+                novo_status = st.selectbox("Status", ["Sob Encomenda", "Em Estoque", "Esgotado"])
+                nova_img = st.text_input("Caminho da Imagem (Ex: assets/novo_item.jpg)")
+                nova_desc = st.text_area("Descrição do Produto")
+            
+            submit = st.form_submit_button("Salvar na Planilha")
+            
+            if submit:
+                if novo_sku and novo_nome:
+                    sheet.append_row([novo_sku, novo_nome, novo_cat, novo_preco, nova_desc, novo_status, nova_img])
+                    st.success(f"Produto {novo_nome} adicionado com sucesso! Atualize a página.")
+                else:
+                    st.error("Por favor, preencha pelo menos o SKU e o Nome.")
+    elif senha != "":
+        st.error("Senha incorreta!")
+
+# ==========================================
+# PÁGINA VITRINE (VISÃO DO CLIENTE - PADRÃO)
+# ==========================================
+else:
     # Estilização
     st.markdown("""
         <style>
@@ -64,7 +101,6 @@ if pagina == "Vitrine de Produtos":
     # Lógica de Filtro
     df_filtrado = df_produtos.copy()
     if search_query:
-        # Filtra ignorando maiúsculas e minúsculas
         df_filtrado = df_filtrado[df_filtrado.apply(lambda row: row.astype(str).str.contains(search_query, case=False).any(), axis=1)]
     if status_filter != 'Todos':
         df_filtrado = df_filtrado[df_filtrado['Status'].str.contains(status_filter, case=False, na=False)]
@@ -107,7 +143,6 @@ if pagina == "Vitrine de Produtos":
                     # Botão WhatsApp e Preço
                     col_price, col_btn = st.columns([1, 1])
                     with col_price:
-                        # Formata o preço lidando com possíveis vírgulas já na planilha
                         try:
                             preco_val = str(row['Preco']).replace(',', '.')
                             preco_formatado = f"R$ {float(preco_val):.2f}".replace('.', ',')
@@ -122,43 +157,3 @@ if pagina == "Vitrine de Produtos":
                                 💬 Pedir
                             </a>
                         """, unsafe_allow_html=True)
-
-# ==========================================
-# PÁGINA 2: PAINEL ADMIN (VISÃO DESENVOLVEDOR)
-# ==========================================
-elif pagina == "Painel Admin (Desenvolvedor)":
-    st.title("⚙️ Painel de Controle")
-    st.write("Acesso restrito para gerenciamento de estoque e catálogo.")
-    
-    senha = st.text_input("Digite a senha de acesso:", type="password")
-    
-    if senha == "admin123": # <--- Mude sua senha aqui!
-        st.success("Acesso Liberado!")
-        st.markdown("### Banco de Dados Atual (Google Sheets)")
-        st.dataframe(df_produtos, use_container_width=True)
-        
-        st.markdown("---")
-        st.markdown("### Adicionar Novo Produto")
-        with st.form("form_novo_produto"):
-            col1, col2 = st.columns(2)
-            with col1:
-                novo_sku = st.text_input("SKU (Ex: NOV-001)")
-                novo_nome = st.text_input("Nome do Produto")
-                novo_cat = st.text_input("Categoria")
-                novo_preco = st.text_input("Preço (Ex: 45.00)")
-            with col2:
-                novo_status = st.selectbox("Status", ["Sob Encomenda", "Em Estoque (1 un.)", "Em Estoque (2 un.)"])
-                nova_img = st.text_input("Caminho da Imagem (Ex: assets/novo_item.jpg)")
-                nova_desc = st.text_area("Descrição do Produto")
-            
-            submit = st.form_submit_button("Salvar na Planilha")
-            
-            if submit:
-                if novo_sku and novo_nome:
-                    # Envia a nova linha para o Google Sheets
-                    sheet.append_row([novo_sku, novo_nome, novo_cat, novo_preco, nova_desc, novo_status, nova_img])
-                    st.success(f"Produto {novo_nome} adicionado com sucesso! Atualize a página.")
-                else:
-                    st.error("Por favor, preencha pelo menos o SKU e o Nome.")
-    elif senha != "":
-        st.error("Senha incorreta!")

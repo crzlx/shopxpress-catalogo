@@ -18,7 +18,7 @@ def init_connection():
 # Conecta e puxa os dados
 try:
     gc = init_connection()
-    url_planilha = st.secrets["https://docs.google.com/spreadsheets/d/1MAFht_3msepgO-1tZJtEOlCkspcQXckHX2BdUx4-62M/edit?usp=sharing]
+    url_planilha = st.secrets["URL_PLANILHA"]
     sheet = gc.open_by_url(url_planilha).sheet1
     dados = sheet.get_all_records()
     df_produtos = pd.DataFrame(dados)
